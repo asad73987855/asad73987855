@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>TikTok Marketplace App</title>
+<title>TikTok Marketplace</title>
 
 <style>
 body {
@@ -60,13 +60,12 @@ button {
     <h2>Welcome <span id="currentUser"></span></h2>
     <button onclick="logout()">Logout</button>
 
-    <h3>List Account</h3>
-    <input type="text" id="username" placeholder="TikTok Username">
+    <h3>Sell TikTok Account</h3>
+    <input type="text" id="t_username" placeholder="TikTok Username">
     <input type="number" id="followers" placeholder="Followers">
     <input type="number" id="price" placeholder="Price">
-    <input type="text" id="whatsapp" placeholder="WhatsApp">
-
-    <button onclick="addAccount()">Add</button>
+    <input type="text" id="whatsapp" placeholder="WhatsApp Number">
+    <button onclick="addAccount()">Add Listing</button>
 
     <h3>Marketplace</h3>
     <div id="accounts"></div>
@@ -78,16 +77,14 @@ button {
 <script>
 let currentUser = localStorage.getItem("currentUser");
 
-// USERS DATABASE
+// DATABASES
 let users = JSON.parse(localStorage.getItem("users")) || {};
-
-// ACCOUNTS DATABASE
 let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
 
-// LOGIN / SIGNUP
+/* ---------------- LOGIN ---------------- */
 function login() {
-    const u = user.value;
-    const p = pass.value;
+    const u = document.getElementById("user").value;
+    const p = document.getElementById("pass").value;
 
     if (!u || !p) return alert("Enter details");
 
@@ -97,66 +94,82 @@ function login() {
 
     if (users[u] === p) {
         localStorage.setItem("currentUser", u);
+        localStorage.setItem("users", JSON.stringify(users));
         location.reload();
     } else {
         alert("Wrong password");
     }
-
-    localStorage.setItem("users", JSON.stringify(users));
 }
 
-// LOGOUT
+/* ---------------- LOGOUT ---------------- */
 function logout() {
     localStorage.removeItem("currentUser");
     location.reload();
 }
 
-// ADD ACCOUNT
+/* ---------------- ADD LISTING ---------------- */
 function addAccount() {
+    const t_username = document.getElementById("t_username").value;
+    const followers = document.getElementById("followers").value;
+    const price = document.getElementById("price").value;
+    const whatsapp = document.getElementById("whatsapp").value;
+
+    if (!t_username || !followers || !price || !whatsapp) {
+        return alert("Fill all fields");
+    }
+
     accounts.push({
         owner: currentUser,
-        username: username.value,
-        followers: followers.value,
-        price: price.value,
-        whatsapp: whatsapp.value
+        username: t_username,
+        followers,
+        price,
+        whatsapp
     });
 
     localStorage.setItem("accounts", JSON.stringify(accounts));
     render();
 }
 
-// RENDER
+/* ---------------- RENDER MARKETPLACE ---------------- */
 function render() {
     const div = document.getElementById("accounts");
     div.innerHTML = "";
 
     accounts.forEach((acc, i) => {
-        div.innerHTML += `
-            <div class="card">
-                <b>@${acc.username}</b><br>
-                Followers: ${acc.followers}<br>
-                Price: $${acc.price}<br>
-                Seller: ${acc.owner}<br>
-                <button onclick="contact('${acc.whatsapp}')">Contact</button>
-                ${acc.owner === currentUser ? `<button onclick="del(${i})">Delete</button>` : ""}
-            </div>
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+            <b>@${acc.username}</b><br>
+            Followers: ${acc.followers}<br>
+            Price: $${acc.price}<br>
+            Seller: ${acc.owner}<br>
         `;
+
+        const btn = document.createElement("button");
+        btn.innerText = "Contact on WhatsApp";
+        btn.onclick = () => {
+            window.open(`https://wa.me/${acc.whatsapp}`, "_blank");
+        };
+
+        card.appendChild(btn);
+
+        if (acc.owner === currentUser) {
+            const delBtn = document.createElement("button");
+            delBtn.innerText = "Delete";
+            delBtn.onclick = () => {
+                accounts.splice(i, 1);
+                localStorage.setItem("accounts", JSON.stringify(accounts));
+                render();
+            };
+            card.appendChild(delBtn);
+        }
+
+        div.appendChild(card);
     });
 }
 
-// DELETE
-function del(i) {
-    accounts.splice(i, 1);
-    localStorage.setItem("accounts", JSON.stringify(accounts));
-    render();
-}
-
-// CONTACT
-function contact(num) {
-    window.open(`https://wa.me/${num}`, "_blank");
-}
-
-// INIT
+/* ---------------- INIT ---------------- */
 if (currentUser) {
     document.getElementById("auth").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
