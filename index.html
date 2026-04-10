@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TikTok Marketplace App</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #111;
+    color: white;
+    padding: 20px;
+}
+
+.hidden { display: none; }
+
+.container {
+    max-width: 500px;
+    margin: auto;
+}
+
+input, button {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: none;
+}
+
+button {
+    background: #ff0050;
+    color: white;
+    cursor: pointer;
+}
+
+.card {
+    background: #222;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="auth">
+    <h2>Login / Signup</h2>
+    <input type="text" id="user" placeholder="Username">
+    <input type="password" id="pass" placeholder="Password">
+    <button onclick="login()">Login / Signup</button>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+
+    <h2>Welcome <span id="currentUser"></span></h2>
+    <button onclick="logout()">Logout</button>
+
+    <h3>List Account</h3>
+    <input type="text" id="username" placeholder="TikTok Username">
+    <input type="number" id="followers" placeholder="Followers">
+    <input type="number" id="price" placeholder="Price">
+    <input type="text" id="whatsapp" placeholder="WhatsApp">
+
+    <button onclick="addAccount()">Add</button>
+
+    <h3>Marketplace</h3>
+    <div id="accounts"></div>
+
+</div>
+
+</div>
+
+<script>
+let currentUser = localStorage.getItem("currentUser");
+
+// USERS DATABASE
+let users = JSON.parse(localStorage.getItem("users")) || {};
+
+// ACCOUNTS DATABASE
+let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
+
+// LOGIN / SIGNUP
+function login() {
+    const u = user.value;
+    const p = pass.value;
+
+    if (!u || !p) return alert("Enter details");
+
+    if (!users[u]) {
+        users[u] = p; // signup
+    }
+
+    if (users[u] === p) {
+        localStorage.setItem("currentUser", u);
+        location.reload();
+    } else {
+        alert("Wrong password");
+    }
+
+    localStorage.setItem("users", JSON.stringify(users));
+}
+
+// LOGOUT
+function logout() {
+    localStorage.removeItem("currentUser");
+    location.reload();
+}
+
+// ADD ACCOUNT
+function addAccount() {
+    accounts.push({
+        owner: currentUser,
+        username: username.value,
+        followers: followers.value,
+        price: price.value,
+        whatsapp: whatsapp.value
+    });
+
+    localStorage.setItem("accounts", JSON.stringify(accounts));
+    render();
+}
+
+// RENDER
+function render() {
+    const div = document.getElementById("accounts");
+    div.innerHTML = "";
+
+    accounts.forEach((acc, i) => {
+        div.innerHTML += `
+            <div class="card">
+                <b>@${acc.username}</b><br>
+                Followers: ${acc.followers}<br>
+                Price: $${acc.price}<br>
+                Seller: ${acc.owner}<br>
+                <button onclick="contact('${acc.whatsapp}')">Contact</button>
+                ${acc.owner === currentUser ? `<button onclick="del(${i})">Delete</button>` : ""}
+            </div>
+        `;
+    });
+}
+
+// DELETE
+function del(i) {
+    accounts.splice(i, 1);
+    localStorage.setItem("accounts", JSON.stringify(accounts));
+    render();
+}
+
+// CONTACT
+function contact(num) {
+    window.open(`https://wa.me/${num}`, "_blank");
+}
+
+// INIT
+if (currentUser) {
+    document.getElementById("auth").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    document.getElementById("currentUser").innerText = currentUser;
+    render();
+}
+</script>
+
+</body>
+</html>
