@@ -12,6 +12,32 @@ body {
     padding: 20px;
 }
 
+/* PROFILE ICON */
+.profile-icon {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ff0050;
+}
+
+/* SUPPORT BUTTON */
+.support-btn {
+    position: fixed;
+    bottom: 15px;
+    left: 15px;
+    background: #25D366;
+    color: white;
+    padding: 12px 15px;
+    border-radius: 50px;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
 .hidden { display: none; }
 
 .container {
@@ -33,6 +59,11 @@ button {
     cursor: pointer;
 }
 
+.btn-group {
+    display: flex;
+    gap: 10px;
+}
+
 .card {
     background: #222;
     padding: 10px;
@@ -44,14 +75,26 @@ button {
 
 <body>
 
+<!-- PROFILE ICON -->
+<img src="profile.jpg" class="profile-icon">
+
+<!-- SUPPORT BUTTON -->
+<div class="support-btn" onclick="openSupport()">
+    💬 Support
+</div>
+
 <div class="container">
 
-<!-- LOGIN -->
+<!-- LOGIN / SIGNUP -->
 <div id="auth">
     <h2>Login / Signup</h2>
     <input type="text" id="user" placeholder="Username">
     <input type="password" id="pass" placeholder="Password">
-    <button onclick="login()">Login / Signup</button>
+
+    <div class="btn-group">
+        <button onclick="signup()">Signup</button>
+        <button onclick="login()">Login</button>
+    </div>
 </div>
 
 <!-- APP -->
@@ -62,6 +105,7 @@ button {
 
     <h3>Sell TikTok Account</h3>
     <input type="text" id="t_username" placeholder="TikTok Username">
+    <input type="text" id="link" placeholder="TikTok Account Link (required)">
     <input type="number" id="followers" placeholder="Followers">
     <input type="number" id="price" placeholder="Price">
     <input type="text" id="whatsapp" placeholder="WhatsApp Number">
@@ -81,6 +125,30 @@ let currentUser = localStorage.getItem("currentUser");
 let users = JSON.parse(localStorage.getItem("users")) || {};
 let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
 
+/* ---------------- SUPPORT ---------------- */
+function openSupport() {
+    window.open("https://wa.me/923346138124", "_blank");
+}
+
+/* ---------------- SIGNUP ---------------- */
+function signup() {
+    const u = document.getElementById("user").value;
+    const p = document.getElementById("pass").value;
+
+    if (!u || !p) return alert("Enter details");
+
+    if (users[u]) {
+        return alert("Username already exists! Please login.");
+    }
+
+    users[u] = p;
+    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("currentUser", u);
+
+    alert("Account created successfully!");
+    location.reload();
+}
+
 /* ---------------- LOGIN ---------------- */
 function login() {
     const u = document.getElementById("user").value;
@@ -89,12 +157,11 @@ function login() {
     if (!u || !p) return alert("Enter details");
 
     if (!users[u]) {
-        users[u] = p; // signup
+        return alert("User not found! Please signup first.");
     }
 
     if (users[u] === p) {
         localStorage.setItem("currentUser", u);
-        localStorage.setItem("users", JSON.stringify(users));
         location.reload();
     } else {
         alert("Wrong password");
@@ -110,27 +177,40 @@ function logout() {
 /* ---------------- ADD LISTING ---------------- */
 function addAccount() {
     const t_username = document.getElementById("t_username").value;
+    const link = document.getElementById("link").value;
     const followers = document.getElementById("followers").value;
     const price = document.getElementById("price").value;
     const whatsapp = document.getElementById("whatsapp").value;
 
-    if (!t_username || !followers || !price || !whatsapp) {
-        return alert("Fill all fields");
+    if (!t_username || !followers || !price || !whatsapp || !link) {
+        return alert("All fields including account link are required!");
+    }
+
+    if (!link.includes("tiktok.com")) {
+        return alert("Enter a valid TikTok account link");
     }
 
     accounts.push({
         owner: currentUser,
         username: t_username,
+        link,
         followers,
         price,
         whatsapp
     });
 
     localStorage.setItem("accounts", JSON.stringify(accounts));
+
+    document.getElementById("t_username").value = "";
+    document.getElementById("link").value = "";
+    document.getElementById("followers").value = "";
+    document.getElementById("price").value = "";
+    document.getElementById("whatsapp").value = "";
+
     render();
 }
 
-/* ---------------- RENDER MARKETPLACE ---------------- */
+/* ---------------- RENDER ---------------- */
 function render() {
     const div = document.getElementById("accounts");
     div.innerHTML = "";
@@ -146,13 +226,19 @@ function render() {
             Seller: ${acc.owner}<br>
         `;
 
-        const btn = document.createElement("button");
-        btn.innerText = "Contact on WhatsApp";
-        btn.onclick = () => {
+        const viewBtn = document.createElement("button");
+        viewBtn.innerText = "View TikTok Account";
+        viewBtn.onclick = () => {
+            window.open(acc.link, "_blank");
+        };
+        card.appendChild(viewBtn);
+
+        const waBtn = document.createElement("button");
+        waBtn.innerText = "Contact on WhatsApp";
+        waBtn.onclick = () => {
             window.open(`https://wa.me/${acc.whatsapp}`, "_blank");
         };
-
-        card.appendChild(btn);
+        card.appendChild(waBtn);
 
         if (acc.owner === currentUser) {
             const delBtn = document.createElement("button");
